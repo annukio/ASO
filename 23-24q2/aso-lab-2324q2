@@ -32,51 +32,74 @@ sudo nano /var/www/index.html
 
 1. Fes: gdisk /dev/nom i comanda 'p', la comanda 'i' tmb dona info
 Completa la taula
+Tmb: lsblk
+
+!!Per a trobar els mountpoints: En René diu que hi ha dues maneres de trobar-ho, 
+una que triguess menys d'un minut, i una que trigues com 5
 
 2. mkswap /dev/sdbn #n siguent el num de la partició de swap
+i editar fstab
 
 3. gdisk /dev/sdb
 gdisk> n
 gdisk> [seguir instruccions] -> Ferla de 4GB codi 8300
+CUIDADO NO MACHAQUIS RES 
 
-4. mkfs -t ext4 /dev/sdb7 (? nom nose)
+4. mkfs -t ext4 /dev/sdbn
 
 5. mkdir /backups
-   mount /dev/sda7 /backups
+   mount /dev/sda7 /backups  # si poses /backups al fstab aixo no cal fer-ho pq ja es farà automàtic quan boti el sistema
+   #+ posar al fstab
+   /dev/sdbn /backup ext4 defaults 0 2
 
-6. grub-install --target=x86 64-efi /dev/sdb, 
-pero abans has de assegurarte que el directori root sigui el del sisteema que instalem:
-chroot /directori
-en el cas de lab es deia /linux
+6. # muntar sys proc i boot com a minim!!!! sino no funciona
+   # bucle copiat de lab:
+   # for i in /dev /dev/pts /proc /sys /run; do
+   >    mount -B $i /linux/$i
+   > done
+
+   # Sino la vols liar
+   mount -B /proc /linux/proc
+   mount -B /sys /linux/sys
+   mount -B /dev /linux/dev
+   mount -B /boot/efi /linux/boot/efi
+
+   DESPRES DE MUNTAR
+   chroot /directori ???
+	
+   grub-install --target=x86 64-efi /dev/NOMDEVICE 
+   # POSSIBLES ERRORS QUE PODEN SALTAR
+   # - command not found -> no esta al path
+   # - permission denied 
+   # - poden ser varies coses, mirar bé l'output de l'error, 
+   update-grub
 
 7. Canviar constrasenyes
 $> sudo passwd aso
 $> sudo passwd root
 
-[reboot sistema, incia al debian]
+[reboot sistema, incia al debian, t'ho posa al enunciat!!]
 
 8.
-$> sudo nano /etc/network/interfaces #per  a veure les interfaces
-# AAfegeix al final del fitxer:
+$> sudo nano /etc/network/interfaces # per  a veure les interfaces
+# Afegeix al final del fitxer:
 auto eno1 # o com es digui la interficie que no es loopnack
 iface eno1 inet dhcp #per a configurar amb dhcp
 
-#Cntrl+O, enter, Cntrl+X per a guardar
-
-$> ifup eno1
 $> ifdown eno1
+$> ifup eno1
+
 
 --------------------------------------------------------------------------
 3-  CREAR NOUS USUARIS I BACKUPS (2,5 P)
 
 1. 
-
 #instal·lar sudo
 $> apt update
 $> apt install sudo
 
 # ha de fallar
-# Mirar fstab????' nose aqui que representa que pot ser
+# Mirar fstab????' nose aqui que representa que pot ser que no estigui en read only
 
 # un cop funcioni:
 $> usermod -a -G sudo aso # afegir aso al grup de sudoers
@@ -98,12 +121,16 @@ $> mkdir /shared
 $> sudo chown students:students /shared 
 # setGID:
 $> sudo chmod g+s /shared
-
+# doanr permisos escriptura
+$> sudo chmod g+w /shared 
 
 4. # per a fer un backup(si vols posa en un script)
 # queda to feo pero ho demanen aixi
 name=$(date '+%Y%m%d-%H%M') 
 tar -zcvf /backup/"$name.tar.gz" --newer-mtime="24 hours ago" -C /etc .
+
+Com ho prefereix en René:
+tar -zcvf /backup/"$(date '+%Y%m%d-%H%M').tar.gz" --newer-mtime="24 hours ago" -C /etc .
 
 --------------------------------------------------------------------------
 4-  INSTAL·LACIO D'APLICACIONS (1,25 P)
@@ -118,6 +145,7 @@ sudo mv moon-buggy-1.0 /usr/local/mbuggy/
 
 cd /usr/local/mbuggy/moon-buggy-1.0
 
+# SUPER IMPORTANT DESCARREGAR BUILD-ESSENTIAL
 sudo apt install build-essential autoconf automake libtool
 
 ./configure --prefix=/usr/local/mbuggy
@@ -142,7 +170,6 @@ moon-buggy
 
 --------------------------------------------------------------------------
 5- SCRIPTS (1,25 P)
-
 
 1.
 
