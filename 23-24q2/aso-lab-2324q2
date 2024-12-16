@@ -1,0 +1,159 @@
+
+Recomenació general: No facis clear a la terminal durant l'examen, si vols la pantalla mes neta fes
+Cntrl+L o fes un less quan llegeixis fitxers
+
+--------------------------------------------------------------------------
+1- GESTIÓ DE RECURSOS AL NÚVOL (1,5 P)
+
+
+1. Crea instancia al EC2 i connecta't mitjancant ssh 
+INSTAL·LAR SERVIDOR WEB [a dins la maquina ec2]
+
+#Per a instal·lar apache
+sudo yum install -y httpd
+
+#per a activar el servidor web
+sudo systemctl start httpd
+sudo systemctl enable httpd
+
+#per a crear l'arxiu htlm amb el contigut indicat:
+sudo nano /var/www/index.html
+
+!! per a sftp:
+- Descarregar:
+ sftp> get /path/to/file
+
+- Pujar:
+ sftp> put filename /path/to/destination/
+
+
+--------------------------------------------------------------------------
+2- RECUPERACIÓ DEL SISTEMA (3,5 P)
+
+1. Fes: gdisk /dev/nom i comanda 'p', la comanda 'i' tmb dona info
+Completa la taula
+
+2. mkswap /dev/sdbn #n siguent el num de la partició de swap
+
+3. gdisk /dev/sdb
+gdisk> n
+gdisk> [seguir instruccions] -> Ferla de 4GB codi 8300
+
+4. mkfs -t ext4 /dev/sdb7 (? nom nose)
+
+5. mkdir /backups
+   mount /dev/sda7 /backups
+
+6. grub-install --target=x86 64-efi /dev/sdb, 
+pero abans has de assegurarte que el directori root sigui el del sisteema que instalem:
+chroot /directori
+en el cas de lab es deia /linux
+
+7. Canviar constrasenyes
+$> sudo passwd aso
+$> sudo passwd root
+
+[reboot sistema, incia al debian]
+
+8.
+$> sudo nano /etc/network/interfaces #per  a veure les interfaces
+# AAfegeix al final del fitxer:
+auto eno1 # o com es digui la interficie que no es loopnack
+iface eno1 inet dhcp #per a configurar amb dhcp
+
+#Cntrl+O, enter, Cntrl+X per a guardar
+
+$> ifup eno1
+$> ifdown eno1
+
+--------------------------------------------------------------------------
+3-  CREAR NOUS USUARIS I BACKUPS (2,5 P)
+
+1. 
+
+#instal·lar sudo
+$> apt update
+$> apt install sudo
+
+# ha de fallar
+# Mirar fstab????' nose aqui que representa que pot ser
+
+# un cop funcioni:
+$> usermod -a -G sudo aso # afegir aso al grup de sudoers
+
+2. 
+# crea grup primer
+$> groupadd students
+# crea usuaris
+$> useradd -g students stu1
+$> useradd -g students stu2
+$> useradd -g students stu3
+
+$> passwd stu1
+$> passwd stu2
+$> passwd stu3
+
+3.
+$> mkdir /shared
+$> sudo chown students:students /shared 
+# setGID:
+$> sudo chmod g+s /shared
+
+
+4. # per a fer un backup(si vols posa en un script)
+# queda to feo pero ho demanen aixi
+name=$(date '+%Y%m%d-%H%M') 
+tar -zcvf /backup/"$name.tar.gz" --newer-mtime="24 hours ago" -C /etc .
+
+--------------------------------------------------------------------------
+4-  INSTAL·LACIO D'APLICACIONS (1,25 P)
+
+$> su stu1
+
+stu1$> sftp aso@asoserver.pc.ac.upc.edu [AsORoCkSHaRd!]
+sftp> get examen-xxx/moon-buggy-1.0.tar.gz
+
+tar -zxvf moon-buggy-1.0.tar.gz
+sudo mv moon-buggy-1.0 /usr/local/mbuggy/
+
+cd /usr/local/mbuggy/moon-buggy-1.0
+
+sudo apt install build-essential autoconf automake libtool
+
+./configure --prefix=/usr/local/mbuggy
+[Et dira les llibreries que falten]
+
+apt search lib[nom header]
+
+#descarrega la que tingui -dev
+
+./configure --prefix=/usr/local/mbuggy
+make
+make install
+
+#prova l'executable: ./moon-buggy
+
+#Ara cal crear link
+echo $PATH
+sudo ln moon-buggy /usr/local/bin/moon-buggy
+
+#prova la comanda
+moon-buggy
+
+--------------------------------------------------------------------------
+5- SCRIPTS (1,25 P)
+
+
+1.
+
+#!/bin/bash
+ps -eo pid,user,cputime,comm --sort=-cputime | head -n 11
+
+2.
+
+#!/bin/bash
+
+DEFAULT_NUM=10
+NUM_PROCESSES=${1:-$DEFAULT_NUM}
+
+ps -eo pid,user,cputime,comm --sort=-cputime | head -n $((NUM_PROCESSES + 1))
