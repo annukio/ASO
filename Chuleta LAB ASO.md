@@ -1,7 +1,3 @@
----
-created: 2024-12-07T15:09
-updated: 2024-12-15T13:46
----
 # Comandos utilizados en las prácticas de laboratorio
 
 - `sudo su`: *Entra en modo superusuario*
