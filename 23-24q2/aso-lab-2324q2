@@ -34,8 +34,14 @@ sudo nano /var/www/index.html
 Completa la taula
 Tmb: lsblk
 
-!!Per a trobar els mountpoints: En René diu que hi ha dues maneres de trobar-ho, 
-una que triguess menys d'un minut, i una que trigues com 5
+!!Per a trobar els mountpoints:
+        ** El directori /mnt serveix per fer mounts temporals dels dispositius q connectem al pc
+        Muntarem en n carpetes cada una de les particions del disc
+	1. Crea tantes carpetes com particions a la carpeta /mnt (sudo mkdir carpeta1 ... carpetan)
+        2. monta a cada carpeta cada paritició del dic (sudo mount /dev/sdan /mnt/carpetan)
+        3. Cotillear manualment que hi ha a cada /mnt/carpetaX
+        4. Busca quina carpeta te el /etc
+        5. i llavors alli pots accedir al /etc/fstab del disc i pots veure on està muntada cada partició
 
 2. mkswap /dev/sdbn #n siguent el num de la partició de swap
 i editar fstab
