@@ -44,7 +44,8 @@ Tmb: lsblk
         5. i llavors alli pots accedir al /etc/fstab del disc i pots veure on està muntada cada partició
 
 2. mkswap /dev/sdbn #n siguent el num de la partició de swap
-i editar fstab
++ afegir al /etc/fstab:
+ /dev/sdbn none swap defaults 0 0
 
 3. gdisk /dev/sdb
 gdisk> n
