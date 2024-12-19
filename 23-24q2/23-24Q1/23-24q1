@@ -1,0 +1,134 @@
+--------------------------------------------------------------------------
+1- RECUPERACIÓ DEL SISTEMA (4,5 P)
+
+1. Fes: gdisk /dev/nom i comanda 'p', la comanda 'i' tmb dona info
+Completa la taula
+Tmb: lsblk
+
+!!Per a trobar els mountpoints:
+        ** El directori /mnt serveix per fer mounts temporals dels dispositius q connectem al pc
+        Muntarem en n carpetes cada una de les particions del disc
+	1. Crea tantes carpetes com particions a la carpeta /mnt (sudo mkdir carpeta1 ... carpetan)
+        2. monta a cada carpeta cada paritició del dic (sudo mount /dev/sdan /mnt/carpetan)
+        3. Cotillear manualment que hi ha a cada /mnt/carpetaX
+        4. Busca quina carpeta te el /etc
+        5. i llavors alli pots accedir al /etc/fstab del disc i pots veure on està muntada cada partició
+
+2. mkswap /dev/sdan + escriure en el fstab:
+
+3. fem blkid per a saber el UUID de la partició de swap
+
+/etc/fstab ultima linea:
+UUID=xxx /dev/sdan swap sw 0 0
+
+4. 
+gdisk /dev/sda
+
+gdisk > n
+(apunta nom, i fes +4G per a que tingui 4GB, codi 8300)
+
+5.mkfs -t ext4 /dev/sdan 
+
+6. mkdir /backups
+   //mount /dev/sdan /backups no cal muntarlo si ho poses al fstab quan rebotis es fará
+
+   sudo vim /etc/fstab
+   afegir ultima linea -> /dev/sdbn /backup ext4 defaults 0 2
+
+7. 
+   muntar sys proc i boot com a minim!!!! sino no funciona
+
+    # muntar sys proc i boot com a minim!!!! sino no funciona
+   # bucle copiat de lab:
+   # for i in /dev /dev/pts /proc /sys /run; do
+   >    mount -B $i /linux/$i
+   > done
+
+   # Sino la vols liar
+   mount -B /proc /linux/proc
+   mount -B /sys /linux/sys
+   mount -B /dev /linux/dev
+   mount -B /boot/efi /linux/boot/efi
+
+   DESPRES DE MUNTAR
+   chroot /directori ???
+	
+      grub-install --target=x86 64-efi /dev/NOMDEVICE 
+   # POSSIBLES ERRORS QUE PODEN SALTAR
+   # - command not found -> no esta al path
+   # - permission denied 
+   # - poden ser varies coses, mirar bé l'output de l'error, 
+	
+   update-grub
+
+8. Canviar constrasenyes
+$> sudo passwd aso
+$> sudo passwd root
+
+[moment de reboot]
+
+9.
+> sudo nano /etc/network/interfaces #per  a veure les interfaces
+# Afegeix al final del fitxer:
+auto eno1 # o com es digui la interficie que no es loopnack
+iface eno1 inet dhcp #per a configurar amb dhcp
+Guarda
+# Per a inicialitzar la xarxa sense haver de fer reboot
+$> ifdown eno1
+$> ifup eno1
+
+--------------------------------------------------------------------------
+2- CREAR NOU USUARI I CONFIGURAR (2,5 P)
+
+1. #instal·lar sudo
+$> apt update
+$> apt install sudo
+
+# ha de fallar
+# Mirar fstab???? poden ser varies coses !!
+# mira si falten paquets, si esta en modo readd only, etc etc
+
+2. entrar a servidor sftp
+   get home_aso.tar.gz
+   exit
+
+   mv home_aso.tar.gz /backups
+
+   tar -zxvf /backup/home_aso.tar.gz -C /
+   
+
+3. 
+# 1 . Creem els grups amb els GIDs donats:
+sudo groupadd -g 4978 helpdesk
+sudo groupadd -g 5432 sysadms
+
+# 2. Creem el seu home
+sudo mkdir -p /home/new_user/manel
+
+# 3. Creem el usuari manel
+sudo useradd -u 5442 -d /home/new_user/manel -m -s /bin/bash -g users -G helpdesk,sysadms,users manel
+passwd manel [introdueix contrasenya]
+
+4.
+sudo chown manel /home/new_user/manel
+sudo chmod 700 /home/new_user/manel
+
+5. su manel
+$echo STATUS
+
+6.
+du -sk /home/new_user/manel
+usermod -a -G sudo manel
+
++ mira en /etc/sudoers si esta aquesta línea:
+%sudo	ALL=(ALL:ALL) ALL
+
+--------------------------------------------------------------------------
+3 - INSTALACIÓ D'APLICACIONS (1,5 P)
+
+--------------------------------------------------------------------------
+4 - SCRIPT (1,5 P)
+1. 
+ps --no-header -eo pcpu,comm --sort=-pcpu | head -n 1
+
+2.
